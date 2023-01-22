@@ -95,7 +95,7 @@ df_seeds_train <- df_seeds[idx,]
 df_seeds_test <- df_seeds[-idx,]
 ```
 
-**Respuesta**: ''
+**Respuesta**: 'Dividir los datos nos permite evaluar la calidad de nuestro modelo. Primero se utiliza los datos de training para entrenar al modelo y luego se usan los datos de test para ver que tan bien el modelo ha hecho la predicción.'
 
 #### PREGUNTA 8
 
@@ -103,7 +103,7 @@ Vamos a crear un modelo para realizar una clasificación binaria, donde le pasar
 
 ¿Qué tipo de algoritmo o modelo debería usar?
 
-**Respuesta**: ''
+**Respuesta**: 'Regresión logística'
 
 #### PREGUNTA 9
 
