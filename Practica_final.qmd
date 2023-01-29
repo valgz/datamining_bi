@@ -20,7 +20,7 @@ df_seeds <- read.table('https://archive.ics.uci.edu/ml/machine-learning-database
 **Respuesta**: 210 filas y 8 columnas.
 
 ```{r}
-df_seeds
+paste("El data frame tiene", nrow(df_seeds), "filas y", ncol(df_seeds), "columnas.")
 ```
 
 #### PREGUNTA 2
@@ -48,8 +48,8 @@ df_seeds$tipo <- factor(df_seeds$tipo, labels = c("Kama", "Rosa", "Canadian"))
 ```{r}
 library(dplyr)
 
-df_seeds |> group_by(tipo) |> summarise(Medias=mean(area)) -> medias_por_area
-medias_por_area
+df_seeds |> group_by(tipo) |> summarise(Medias=mean(area)) -> area_media_por_tipo
+area_media_por_tipo
 ```
 
 #### PREGUNTA 4
@@ -60,7 +60,7 @@ medias_por_area
 ggplot(df_seeds, aes(x=tipo, y=area)) + geom_boxplot()
 ```
 
-**Respuesta**: 'Es un grafico Boxplot y la linea del centro representa la mediana.'
+**Respuesta**: 'Es un grafico boxplot y la linea del centro representa la mediana.'
 
 #### PREGUNTA 5
 
@@ -71,7 +71,9 @@ ggplot(df_seeds, aes(x=tipo, y=area)) + geom_boxplot()
 ```{r}
 library(ggplot2)
 ggplot(df_seeds, aes(x=compacto, y=area))+
-  geom_point(aes(color=tipo))
+  geom_point(aes(color=tipo))+
+  labs(color="Tipo de semilla")+
+  ggtitle("Distribución de semillas segun area y compacto", subtitle = "diferenciadas por tipo")
 ```
 
 #### PREGUNTA 6
@@ -89,7 +91,7 @@ df_seeds |> mutate(is_kama = tipo=='Kama') -> df_seeds
 Vamos a dividir el conjunto de datos en test y training porque vamos a entrenar un modelo que me permita diferenciar si una semilla es de tipo Kama o no. ¿Por qué es aconsejable dividir el dataset en los grupos de train y test?
 
 ```{r}
-set.seed(123) # Este set.seed hace que a todos nos generen los mismos número aleatorios
+set.seed(123)
 idx <- sample(1:nrow(df_seeds), 0.7*nrow(df_seeds))
 df_seeds_train <- df_seeds[idx,]
 df_seeds_test <- df_seeds[-idx,]
@@ -112,6 +114,10 @@ Crea un modelo que me permita clasificar si una semilla es de tipo Kama o no con
 **Respuesta**:
 
 ```{r}
+model <- glm(data=df_seeds_train,
+             formula = is_kama~area+perimetro+compacto+longitud+coeficient.asimetria+longitud.ranura,
+             family=binomial(link='logit'))
+summary(model)
 ```
 
 #### PREGUNTA 10
@@ -121,6 +127,15 @@ Si usamos un umbral de 0 en la salida del modelo (lo que equivale a probabilidad
 **Respuesta**.
 
 ```{r}
+umbral <- 0.5
+pred_test<-predict(model, df_seeds_test, type="response")
+M<-table(real=df_seeds_test$is_kama, pred=pred_test>umbral)
+M
+```
+
+```{r}
+paste("Precisión:", M[2,2]/(M[1,2]+M[2,2]))
+paste("Exhaustividad:", M[2,2]/(M[2,1]+M[2,2]))
 ```
 
 #### PREGUNTA 11
@@ -133,4 +148,20 @@ cl<-df_seeds |> select(area,perimetro,compacto,longitud,anchura,coeficient.asime
 table(real=df_seeds$tipo,cluster=cl$cluster)
 ```
 
-**Respuesta**: ''
+**Respuesta**: 'Con esta línea se esta creando un nuevo dataset con todas las columnas del dataset de seeds pero sin la columna "tipo" ni "is_kama". Luego, se ha aplicado el algoritmo kmeans donde le indicamos que queremos 3 clusters. Finalmente obtenemos con la función table una representación parecida a una matriz de confusión donde se nos muestra que cantidad de cada tipo de semilla se nos ha asignado a cada cluster.'
+
+### Extras:
+
+He agregado como columna los clusters al dataset de seeds y he hecho el mismo grafico de puntos para ver si el agrupamiento de kmeans es similar al tipo real de las semillas.
+
+```{r}
+df_seeds["clusters"] <- cl$cluster
+summary(df_seeds)
+```
+
+```{r}
+ggplot(df_seeds, aes(x=compacto, y=area))+
+  geom_point(aes(color=as.factor(clusters)))+
+  labs(color="Clústers")
+```
+
